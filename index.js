@@ -25,11 +25,12 @@ app.use(cors(corsOptions)) // Use this after the variable declarationd
 async function uploadData(req, res) {
     console.log(req.file);
     const jsonArray = await csvtojson().fromString(req.file.buffer.toString('utf8'));
+
     try {
-        await db.db.connect();
+        await db.db.connect();   
         await db.db.createCollection.collection(req.file.originalname.split(".")[0]).insertMany(jsonArray);
         await db.db.disconnect();
-        res.send({ isUploaded: true});
+        res.send({ isUploaded: true });
     } catch (error) {
         console.log(error);
     }
@@ -52,6 +53,19 @@ async function insertUser(req, res) {
     }
 }
 
+async function getUser(req, res) {
+    await db.db.connect()
+    User.User.findOne({ rollno: rollno }, (err, user) => {
+        if (err) {
+            res.send({error : err, found : false});
+        } else {
+            res.send({userData : user, found : true});
+        }
+    });
+    db.db.disconnect();
+
+}
+
 
 app.post('/insertUser', (req, res) => {
     insertUser(req, res);
@@ -61,6 +75,11 @@ app.post('/insertUser', (req, res) => {
 app.post('/uploadDataset', upload.single('file'), (req, res) => {
     uploadData(req, res);
 })
+
+app.post('/getUser', (req, res) => {
+    getUser(req, res);
+})
+
 
 app.get('/home', (req, res) => {
     res.status(200).send({ msg: "Connected to database API!!" });
